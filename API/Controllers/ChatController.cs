@@ -7,19 +7,14 @@ namespace API.Controllers
     public class ChatController : ControllerBase
     {
         [HttpPost]
-        public async Task<IActionResult> EnviarMensagem([FromBody] Requisicao requisicao)
+        public async Task<IActionResult> EnviarMensagem([FromBody] Mensagem mensagem)
         {
-            if (string.IsNullOrWhiteSpace(requisicao.Mensagem))
+            if (string.IsNullOrWhiteSpace(mensagem.Conteudo))
                 return BadRequest("Mensagem não pode ser vazia.");
 
-            string resposta = requisicao.Mensagem + "/ teste";
+            string resposta = mensagem.Conteudo + "/ teste";
 
             return Ok(resposta);
         }
-    }
-
-    public class Requisicao
-    {
-        public required string Mensagem { get; set; }
     }
 }
