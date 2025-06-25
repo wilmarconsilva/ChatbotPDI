@@ -7,12 +7,14 @@ namespace API.Controllers
     public class ChatController : ControllerBase
     {
         [HttpPost]
-        public async Task<IActionResult> EnviarMensagem([FromBody] Mensagem mensagem)
+        public async Task<IActionResult> EnviarMensagem([FromBody] Dominio.ObjetosValor.Chat.Mensagem mensagem, CancellationToken cancellationToken)
         {
             if (string.IsNullOrWhiteSpace(mensagem.Conteudo))
                 return BadRequest("Mensagem não pode ser vazia.");
 
-            string resposta = mensagem.Conteudo + "/ teste";
+            Servicos.Chat chat = new(cancellationToken);
+
+            string resposta = await chat.EnviarMensagem(mensagem.Conteudo);
 
             return Ok(resposta);
         }
