@@ -6,7 +6,6 @@ namespace Servicos
     public class Chat
     {
         private readonly CancellationToken _cancellationToken;
-        private readonly Dominio.ObjetosValor.Chat.ClienteChat _clienteChat = InstanciaClienteChat.ClienteChat;
         private readonly string _promptIA = "Você é um assistente que precisa cumprimentar o usuário com a seguinte mensagem: Olá tudo bem, eu sou a IA do Google";
 
         public Chat() : this(default) { }
@@ -45,7 +44,8 @@ namespace Servicos
                 string jsonRequisicao = JsonSerializer.Serialize(corpoRequisicao, new JsonSerializerOptions { WriteIndented = false });
                 StringContent conteudoRequisicao = new StringContent(jsonRequisicao, Encoding.UTF8, "application/json");
 
-                HttpResponseMessage resposta = await _clienteChat.ClienteHTTP.PostAsync($"/v1beta/models/gemini-2.5-pro:generateContent?key={_clienteChat.ChaveAPI}", conteudoRequisicao, _cancellationToken);
+                Dominio.ObjetosValor.Chat.ClienteChat clienteChat = ClienteChat.BuscarInstancia();
+                HttpResponseMessage resposta = await clienteChat.ClienteHTTP.PostAsync($"/v1beta/models/gemini-1.5-flash-latest:generateContent?key={clienteChat.ChaveAPI}", conteudoRequisicao, _cancellationToken);
 
                 resposta.EnsureSuccessStatusCode();
 
@@ -54,21 +54,27 @@ namespace Servicos
                 using (JsonDocument doc = JsonDocument.Parse(responseString))
                 {
                     if (doc.RootElement.TryGetProperty("candidates", out JsonElement candidates) &&
-                        candidates.EnumerateArray().Any())
+                        candidates.ValueKind == JsonValueKind.Array &&
+                        candidates.GetArrayLength() > 0)
                     {
-                        if (candidates.EnumerateArray().First().TryGetProperty("content", out JsonElement contentElement) &&
-                            contentElement.TryGetProperty("parts", out JsonElement parts) &&
-                            parts.EnumerateArray().Any())
+                        JsonElement firstCandidate = candidates[0];
+
+                        if (firstCandidate.TryGetProperty("content", out JsonElement content) &&
+                            content.TryGetProperty("parts", out JsonElement parts) &&
+                            parts.ValueKind == JsonValueKind.Array &&
+                            parts.GetArrayLength() > 0)
                         {
-                            if (parts.EnumerateArray().First().TryGetProperty("text", out JsonElement textElement))
+                            JsonElement firstPart = parts[0];
+
+                            if (firstPart.TryGetProperty("text", out JsonElement text))
                             {
-                                return textElement.GetString() ?? "Não foi possível extrair a resposta textual.";
+                                return text.GetString() ?? "Não foi possível extrair a resposta textual.";
                             }
                         }
                     }
                 }
 
-                return "Resposta da IA vazia ou em formato inesperado.";
+                return "Resposta da IA malformada ou vazia.";
             }
             catch (HttpRequestException ex)
             {
