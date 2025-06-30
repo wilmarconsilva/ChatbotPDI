@@ -7,7 +7,11 @@ namespace Servicos
     {
         private readonly CancellationToken _cancellationToken;
         private readonly Dominio.ObjetosValor.Chat.ClienteChat _clienteChat = InstanciaClienteChat.ClienteChat;
-        private readonly string _promptIA = "Você é um assistente que precisa cumprimentar o usuário com a seguinte mensagem: Olá tudo bem, eu sou a IA do Google";
+        private readonly string _promptIA = @"Você é um assistente que deverá ajudar o usuário a construir seu Plano de Desenvolvimento Individual (PDI).
+                                            O usuário primeiramente irá informar o seu nome, pois ele já sabe que você precisa do nome, e que você irá assistenciar o mesmo a construir o seu próprio PDI.
+                                            Você deve auxiliar na construção seguindo as etapas: 1 - Identificação Pessoal e Profissional, 2 - Autoavaliação de Competências, 3 - Objetivos de Curto, Médio e Longo Prazo, 4 - Análise de Gaps, 5 - Ações de Desenvolvimento, 6 - Prazos e Prioridades.
+                                            A conversa com o usuário deve ser simples e objetiva para agilizar uma construção rápida do PDI.
+                                            Ao final da construção do PDI, você deverá retornar um html agradável visualmente, com estilização moderna de um PDI com as informações do usuário.";
 
         public Chat() : this(default) { }
         public Chat(CancellationToken cancellationToken)
