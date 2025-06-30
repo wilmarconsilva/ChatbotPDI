@@ -6,7 +6,6 @@ namespace Servicos
     public class Chat
     {
         private readonly CancellationToken _cancellationToken;
-        private readonly Dominio.ObjetosValor.Chat.ClienteChat _clienteChat = InstanciaClienteChat.ClienteChat;
         private readonly string _promptIA = @"Você é um assistente que deverá ajudar o usuário a construir seu Plano de Desenvolvimento Individual (PDI).
                                             O usuário primeiramente irá informar o seu nome, pois ele já sabe que você precisa do nome, e que você irá assistenciar o mesmo a construir o seu próprio PDI.
                                             Você deve auxiliar na construção seguindo as etapas: 1 - Identificação Pessoal e Profissional, 2 - Autoavaliação de Competências, 3 - Objetivos de Curto, Médio e Longo Prazo, 4 - Análise de Gaps, 5 - Ações de Desenvolvimento, 6 - Prazos e Prioridades.
@@ -49,7 +48,8 @@ namespace Servicos
                 string jsonRequisicao = JsonSerializer.Serialize(corpoRequisicao, new JsonSerializerOptions { WriteIndented = false });
                 StringContent conteudoRequisicao = new StringContent(jsonRequisicao, Encoding.UTF8, "application/json");
 
-                HttpResponseMessage resposta = await _clienteChat.ClienteHTTP.PostAsync($"/v1beta/models/gemini-2.5-pro:generateContent?key={_clienteChat.ChaveAPI}", conteudoRequisicao, _cancellationToken);
+                Dominio.ObjetosValor.Chat.ClienteChat clienteChat = ClienteChat.BuscarInstancia();
+                HttpResponseMessage resposta = await clienteChat.ClienteHTTP.PostAsync($"/v1beta/models/gemini-1.5-flash-latest:generateContent?key={clienteChat.ChaveAPI}", conteudoRequisicao, _cancellationToken);
 
                 resposta.EnsureSuccessStatusCode();
 
@@ -58,21 +58,27 @@ namespace Servicos
                 using (JsonDocument doc = JsonDocument.Parse(responseString))
                 {
                     if (doc.RootElement.TryGetProperty("candidates", out JsonElement candidates) &&
-                        candidates.EnumerateArray().Any())
+                        candidates.ValueKind == JsonValueKind.Array &&
+                        candidates.GetArrayLength() > 0)
                     {
-                        if (candidates.EnumerateArray().First().TryGetProperty("content", out JsonElement contentElement) &&
-                            contentElement.TryGetProperty("parts", out JsonElement parts) &&
-                            parts.EnumerateArray().Any())
+                        JsonElement firstCandidate = candidates[0];
+
+                        if (firstCandidate.TryGetProperty("content", out JsonElement content) &&
+                            content.TryGetProperty("parts", out JsonElement parts) &&
+                            parts.ValueKind == JsonValueKind.Array &&
+                            parts.GetArrayLength() > 0)
                         {
-                            if (parts.EnumerateArray().First().TryGetProperty("text", out JsonElement textElement))
+                            JsonElement firstPart = parts[0];
+
+                            if (firstPart.TryGetProperty("text", out JsonElement text))
                             {
-                                return textElement.GetString() ?? "Não foi possível extrair a resposta textual.";
+                                return text.GetString() ?? "Não foi possível extrair a resposta textual.";
                             }
                         }
                     }
                 }
 
-                return "Resposta da IA vazia ou em formato inesperado.";
+                return "Resposta da IA malformada ou vazia.";
             }
             catch (HttpRequestException ex)
             {
