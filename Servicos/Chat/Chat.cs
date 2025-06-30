@@ -7,7 +7,7 @@ namespace Servicos
     {
         private readonly CancellationToken _cancellationToken;
         private readonly Dominio.ObjetosValor.Chat.ClienteChat _clienteChat = InstanciaClienteChat.ClienteChat;
-        private readonly string _promptIA = "Você é um assistente útil que precisa cumprimentar o usuário, e se despedir após a próxima mensagem do mesmo";
+        private readonly string _promptIA = "Você é um assistente que precisa cumprimentar o usuário com a seguinte mensagem: Olá tudo bem, eu sou a IA do Google";
 
         public Chat() : this(default) { }
         public Chat(CancellationToken cancellationToken)

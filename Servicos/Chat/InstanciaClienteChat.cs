@@ -2,7 +2,7 @@ namespace Servicos
 {
     public static class InstanciaClienteChat
     {
-        private static readonly string _chaveAPI = "";
+        private static readonly string _chaveAPI = "AIzaSyAgDS2BwtRW0CLJRGillPBpGC5Uo1xVTMU";
 
         private static readonly Lazy<Dominio.ObjetosValor.Chat.ClienteChat> _lazyClienteChat = new(() =>
         {
