@@ -2,5 +2,10 @@
 
 public class Mensagem
 {
-    public required string Conteudo { get; set; }
+    public Mensagem(string conteudo)
+    {
+        Conteudo = conteudo;
+    }
+
+    public string Conteudo { get; }
 }
